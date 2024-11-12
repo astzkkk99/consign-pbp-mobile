@@ -1,114 +1,286 @@
-**Membuat sebuah program Flutter baru dengan tema E-Commerce yang sesuai dengan tugas-tugas sebelumnya.**
+**Tugas 8** 
+----------------
+**Membuat minimal satu halaman baru pada aplikasi, yaitu halaman formulir tambah item baru dengan ketentuan sebagai berikut:**
 
-1. Membuat direktori lokal flutter, menjalankan 
+**Memakai minimal tiga elemen input, yaitu name, amount, description. Tambahkan elemen input sesuai dengan model pada aplikasi tugas Django yang telah kamu buat.**
+1. Buat file baru pada direktori lib, saya namakan itementry_form.dart
+2. Buat elemen input sesuai dengan models, :
 ```
-flutter create consign_pbp
+class _ItemEntryFormPageState extends State<ItemEntryFormPage> {
+  final _formKey = GlobalKey<FormState>();
+	String _itemType = "";
+	String _itemName = "";
+	int _itemPrice = 0;
+  String _itemDescription = "";
 
-```
-2. Lalu masuk ke direktori proyek itu dengan cd
-
-**Membuat tiga tombol sederhana dengan ikon dan teks untuk:**
-Melihat daftar produk (Lihat Daftar Produk)
-Menambah produk (Tambah Produk)
-Logout (Logout)
-
-1. Membuat class ItemHomepage berisi name, icon, dan color
-```
-class ItemHomepage {
-     final String name;
-     final IconData icon;
-     final Color color;
-
-     ItemHomepage(this.name, this.icon, this.color);
- }
+}
 ```
 
-2. Pada class MyHomepage membuat list ItemHomepage yang berisi tombol yang ingin ditambahkan.
+Dalam tugas saya menggunakan model itemType, itemName, itemPrice, itemDescription
+
+**Memiliki sebuah tombol Save.**
 ```
-final List<ItemHomepage> items = [
-         ItemHomepage("Lihat Daftar Produk", Icons.shopping_cart_rounded, Colors.lightBlue),
-         ItemHomepage("Tambah Produk", Icons.add_circle_outline_rounded, Colors.teal),
-         ItemHomepage("Logout", Icons.logout_rounded, Colors.redAccent),
-  ];
+Align(
+  alignment: Alignment.bottomCenter,
+  child: Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: ElevatedButton(
+      style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all(
+            Theme.of(context).colorScheme.primary),
+      ),
+      onPressed: () {
+        if (_formKey.currentState!.validate()) {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('Produk berhasil tersimpan!'),
+                content: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Tipe Produk: $_itemType'),
+                      Text('Nama Produk: $_itemName'),
+                      Text('Harga Produk: $_itemPrice'),
+                      Text('Deskripsi Produk: $_itemDescription'),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    child: const Text('OK'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _formKey.currentState!.reset();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      },
+      child: const Text(
+        "Save",
+        style: TextStyle(color: Colors.white),
+      ),
+    ),
+  ),
+),
 ```
-**Mengimplementasikan warna-warna yang berbeda untuk setiap tombol (Lihat Daftar Produk, Tambah Produk, dan Logout).**
-1. Membuat atribut color pada class ItemHomepage
-2. Pada class MyHomepage, atur warna dari tiap tombol di list ItemHomepage.
+
+**Setiap elemen input di formulir juga harus divalidasi dengan ketentuan sebagai berikut:**
+
+**Setiap elemen input tidak boleh kosong.**
+
+**Setiap elemen input harus berisi data dengan tipe data atribut modelnya.**
 
 
-**Memunculkan Snackbar dengan tulisan:**
-"Kamu telah menekan tombol Lihat Daftar Produk" ketika tombol Lihat Daftar Produk ditekan.
-"Kamu telah menekan tombol Tambah Produk" ketika tombol Tambah Produk ditekan.
-"Kamu telah menekan tombol Logout" ketika tombol Logout ditekan.
-
-1. Tambahkan kode di class ItemCard
+itemType
 ```
-....
-child: InkWell(
-        // Aksi ketika kartu ditekan.
-        onTap: () {
-          // Menampilkan pesan SnackBar saat kartu ditekan.
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(content: Text("Kamu telah menekan tombol ${item.name}!"))
-            );
-        },
-)
-....
+validator: (String? value) {
+    if (value == null || value.isEmpty) {
+      return "Tipe produk tidak boleh kosong!";
+    }
+    if (!value.contains(RegExp(r'[a-zA-Z]'))) {
+      return "Tipe produk harus berisi kata-kata, tidak boleh hanya angka!";
+    }
+    if (value.trim().split(' ').where((word) => word.isNotEmpty).length < 1) {
+      return "Tipe produk harus ada minimal 1 kata!";
+    }
+    return null;
+  },
+
 ```
 
-**Jelaskan apa yang dimaksud dengan stateless widget dan stateful widget, dan jelaskan perbedaan dari keduanya.**
-1. Stateless widget: widget tanpa state yang bisa berubah, dibuat untuk elemen UI yang statis, seperti Text, Icon, Container
-2. Stateful widget: widget dengan state yang bisa berubah, dibuat untuk elemen UI yang perlu diperbarui atau berinteraksi dengan pengguna, seperti Checkbox, Slider, TextField
 
-Dalam pengaturan state, StatelessWidget tidak memiliki fungsi setState, namun StatefulWidget punya.
+itemName
+```
+validator: (String? value) {
+    if (value == null || value.isEmpty) {
+      return "Nama produk tidak boleh kosong!";
+    }
+    if (!value.contains(RegExp(r'[a-zA-Z]'))) {
+      return "Nama produk harus berisi kata-kata, tidak boleh hanya angka!";
+    }
+    if (value.trim().split(' ').where((word) => word.isNotEmpty).length < 2) {
+      return "Nama produk harus ada minimal 2 kata!";
+    }
+    return null;
+  },
+```
 
-**Sebutkan widget apa saja yang kamu gunakan pada proyek ini dan jelaskan fungsinya.**
-Berikut adalah widget-widget yang digunakan dalam proyek ini beserta fungsinya:
+itemPrice
+```
+validator: (String? value) {
+  if (value == null || value.isEmpty) {
+    return "Harga tidak boleh kosong!";
+  }
+  if (int.tryParse(value) == null) {
+    return "Harga harus berupa angka!";
+  }
+  if (int.parse(value) < 0) {
+    return "Harga tidak boleh negatif!";
+  }
+  if (int.parse(value) == 0) {
+    return "Harga tidak boleh nol!";
+  }
+  return null;
+},
+```
+itemDescription
+```
+validator: (String? value) {
+    if (value == null || value.isEmpty) {
+      return "Deskripsi produk tidak boleh kosong!";
+    }
+    if (value.trim().split(' ').where((word) => word.isNotEmpty).length < 5) {
+      return "Deskripsi produk harus ada minimal 5 kata!";
+    }
+    if (!value.contains(RegExp(r'[a-zA-Z]'))) {
+      return "Deskripsi produk harus berisi kata-kata, tidak boleh hanya angka!";
+    }
+    return null;
+  },
+```
 
-1. MaterialApp: Widget utama yang mengatur tema, title, dan root halaman aplikasi.
+**Mengarahkan pengguna ke halaman form tambah item baru ketika menekan tombol Tambah Item pada halaman utama.**
 
-2. Scaffold: Memberikan struktur dasar aplikasi, seperti AppBar di bagian atas dan area body untuk konten utama.
-
-3. AppBar: Bagian atas halaman (header) yang menampilkan judul aplikasi ("Consign!").
-
-4. Padding: Memberikan jarak atau ruang di sekitar widget untuk tata letak yang lebih rapi.
-
-5. Column: Menyusun widget secara vertikal.
-
-6. Row: Menyusun widget secara horizontal, digunakan untuk menampilkan tiga **InfoCard** secara berdampingan.
-
-7. InfoCard: Widget khusus yang menampilkan informasi berupa "NPM", "Nama", dan "Kelas" dalam bentuk kartu.
-
-8. Card: Membuat elemen tampak seperti kartu dengan efek bayangan, digunakan dalam **InfoCard** untuk menampilkan informasi.
-
-9. Text: Menampilkan teks, digunakan untuk menampilkan "NPM", "Nama", "Kelas", judul aplikasi, dan teks sambutan.
-
-10. SizedBox: Memberikan jarak vertikal antar-widget untuk tata letak yang lebih baik.
-
-11. Center: Mengatur widget agar berada di tengah area yang tersedia.
-
-12. GridView.count: Menyusun **ItemCard** dalam bentuk grid dengan tiga kolom, berguna untuk menampilkan daftar produk.
-
-13. ItemCard: Widget yang menampilkan ikon dan teks untuk setiap item menu seperti "Lihat Daftar Produk", "Tambah Produk", dan "Logout".
-
-14. InkWell: Menambahkan efek klik pada widget, digunakan pada **ItemCard** untuk memberikan aksi saat tombol ditekan.
-
-15. SnackBar: Menampilkan pesan sementara di bagian bawah layar saat tombol **ItemCard** ditekan.
-
-16. Icon: Menampilkan ikon di dalam **ItemCard** untuk menggambarkan setiap item menu.
+Pada MyHomePage, ketika pengguna menekan tombol Tambah Produk, mereka diarahkan ke halaman ItemEntryFormPage:
+```
+if (item.name == "Tambah Produk") {
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const ItemEntryFormPage()),
+  );
+}
+```
 
 
-**Apa fungsi dari setState()? Jelaskan variabel apa saja yang dapat terdampak dengan fungsi tersebut.**
-Fungsi setState() dalam Flutter digunakan untuk memberi tahu framework bahwa state suatu widget telah berubah dan harus dirender ulang dengan data terbaru. Ini hanya dapat digunakan dalam widget yang bersifat Stateful Widget, karena hanya widget jenis ini yang memiliki state yang dapat berubah selama runtime.
+**Memunculkan data sesuai isi dari formulir yang diisi dalam sebuah pop-up setelah menekan tombol Save pada halaman formulir tambah item baru.**
 
-**Jelaskan perbedaan antara const dengan final.**
-const digunakan ketika kita memiliki nilai tetap yang sudah pasti tidak akan berubah,
-Contoh const pi = 3.14
+Setelah tombol Save ditekan, data input dari formulir ditampilkan dalam AlertDialog:
+
+```
+showDialog(
+  context: context,
+  builder: (context) {
+    return AlertDialog(
+      title: const Text('Produk berhasil tersimpan!'),
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Tipe Produk: $_itemType'),
+            Text('Nama Produk: $_itemName'),
+            Text('Harga Produk: $_itemPrice'),
+            Text('Deskripsi Produk: $_itemDescription'),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          child: const Text('OK'),
+          onPressed: () {
+            Navigator.pop(context);
+            _formKey.currentState!.reset();
+          },
+        ),
+      ],
+    );
+  },
+);
+
+```
+
+**Membuat sebuah drawer pada aplikasi dengan ketentuan sebagai berikut:**
+
+**Drawer minimal memiliki dua buah opsi, yaitu Halaman Utama dan Tambah Item.**
+
+**Ketika memiih opsi Halaman Utama, maka aplikasi akan mengarahkan pengguna ke halaman utama.**
+
+**Ketika memiih opsi Tambah Item, maka aplikasi akan mengarahkan pengguna ke halaman form tambah item baru.**
+
+```
+ListTile(
+  leading: const Icon(Icons.home_outlined),
+  title: const Text('Halaman Utama'),
+  onTap: () {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => MyHomePage()),
+    );
+  },
+),
+ListTile(
+  leading: const Icon(Icons.add_circle_outline_rounded),
+  title: const Text('Tambah Produk'),
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ItemEntryFormPage()),
+    );
+  },
+),
+```
 
 
-Sedangkan final ketika nilai akan tetap setelah ditulis, tapi mungkin perlu diambil ketika runtime,
-contoh : final username = fetchUsername()
+
+**Apa kegunaan const di Flutter? Jelaskan apa keuntungan ketika menggunakan const pada kode Flutter. Kapan sebaiknya kita menggunakan const, dan kapan sebaiknya tidak digunakan?**
+
+const digunakan untuk mendefinisikan objek yang bersifat immutable, artinya nilainya tidak akan berubah selama runtime. Menggunakan const di Flutter bermanfaat dalam meningkatkan performa aplikasi karena widget yang didefinisikan dengan const hanya dibuat satu kali dan dapat digunakan kembali, sehingga mengurangi jumlah alokasi memori. Sebaiknya gunakan const ketika widget atau nilai tidak akan berubah setelah inisialisasi. Jika nilai tersebut dapat berubah, gunakan final atau tanpa modifier.
 
 
+**Jelaskan dan bandingkan penggunaan Column dan Row pada Flutter. Berikan contoh implementasi dari masing-masing layout widget ini!**
+
+Column digunakan untuk menyusun widget secara vertikal (dari atas ke bawah), sementara Row untuk menyusun secara horizontal (dari kiri ke kanan).
+
+Contoh Column:
+```
+Column(
+  children: [
+    Text("Text 1"),
+    Text("Text 2"),
+    Text("Text 3"),
+  ],
+);
+```
+Contoh Row:
+```
+Row(
+  children: [
+    Icon(Icons.star),
+    Text("Row Example"),
+  ],
+);
+```
+
+**Sebutkan apa saja elemen input yang kamu gunakan pada halaman form yang kamu buat pada tugas kali ini. Apakah terdapat elemen input Flutter lain yang tidak kamu gunakan pada tugas ini? Jelaskan!**
+
+Pada halaman form yang dibuat, elemen input yang digunakan adalah TextFormField untuk input tipe produk, nama produk, harga produk, dan deskripsi produk.
+
+Terdapat elemen input Flutter lain yang tidak digunakan pada tugas ini, seperti Checkbox, Switch, DropdownButton, dan DatePicker. Elemen ini dapat digunakan sesuai kebutuhan, misalnya DropdownButton untuk pilihan kategori atau DatePicker untuk tanggal.
+
+**Bagaimana cara kamu mengatur tema (theme) dalam aplikasi Flutter agar aplikasi yang dibuat konsisten? Apakah kamu mengimplementasikan tema pada aplikasi yang kamu buat?**
+
+Untuk konsistensi tampilan, tema diatur pada MaterialApp di bagian theme, menggunakan ThemeData. Contohnya:
+```
+theme: ThemeData(
+    colorScheme: ColorScheme.fromSwatch(
+        primarySwatch: Colors.lightBlue,
+    ).copyWith(secondary: Colors.lightBlue[50]),
+);
+```
+
+**Bagaimana cara kamu menangani navigasi dalam aplikasi dengan banyak halaman pada Flutter?**
+
+Navigasi dalam aplikasi dilakukan menggunakan Navigator. Untuk berpindah halaman, digunakan Navigator.push() untuk membuka halaman baru dan Navigator.pushReplacement() untuk mengganti halaman saat ini dengan halaman yang baru. Contohnya:
+
+```
+Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => ItemEntryFormPage()),
+);
+```
+Akaan menavigasi ke page item entry form.
