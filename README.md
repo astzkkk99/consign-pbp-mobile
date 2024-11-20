@@ -1,286 +1,471 @@
-**Tugas 8** 
+**Tugas 9** 
 ----------------
-**Membuat minimal satu halaman baru pada aplikasi, yaitu halaman formulir tambah item baru dengan ketentuan sebagai berikut:**
+**Memastikan deployment proyek tugas Django kamu telah berjalan dengan baik.**
 
-**Memakai minimal tiga elemen input, yaitu name, amount, description. Tambahkan elemen input sesuai dengan model pada aplikasi tugas Django yang telah kamu buat.**
-1. Buat file baru pada direktori lib, saya namakan itementry_form.dart
-2. Buat elemen input sesuai dengan models, :
+**Untuk masalah terkait PWS yang belum bisa diintegrasikan dengan Flutter, Tim Asdos akan menginformasikan secara menyusul. Untuk sementara, kalian diperbolehkan untuk melakukan integrasi pada local host saja.**
+
+
+**Mengimplementasikan fitur registrasi akun pada proyek tugas Flutter.**
+**Membuat halaman login pada proyek tugas Flutter.**
+**Mengintegrasikan sistem autentikasi Django dengan proyek tugas Flutter.**
+1. Buat app django bernama authentication
+2. Install django-corsheaders
+3. Buat method view untuk login pada authentication
+4. lalu pada directory flutter, install package pub add provider, dan pub add pbp_django_auth
+5. Modifikasi widget pada main.dart
 ```
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Provider(
+      create: (_) {
+        CookieRequest request = CookieRequest();
+        return request;
+      },
+      child: MaterialApp(
+        title: 'Mental Health Tracker',
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSwatch(
+            primarySwatch: Colors.deepPurple,
+          ).copyWith(secondary: Colors.deepPurple[400]),
+        ),
+        home: MyHomePage(),
+      ),
+    );
+  }
+}
+```
+6. Buat file baru pada screens bernama login.dart
+7. Dan buat file register.dart juga
+
+
+**Membuat model kustom sesuai dengan proyek aplikasi Django.**
+1. Dengan quicktype, copy json dari proyek django, lalu masukan ke quicktype, lalu salin kodenya:
+```
+// To parse this JSON data, do
+//
+//     final item = itemFromJson(jsonString);
+
+import 'dart:convert';
+
+List<Item> itemFromJson(String str) => List<Item>.from(json.decode(str).map((x) => Item.fromJson(x)));
+
+String itemToJson(List<Item> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+
+class Item {
+    String model;
+    String pk;
+    Fields fields;
+
+    Item({
+        required this.model,
+        required this.pk,
+        required this.fields,
+    });
+
+    factory Item.fromJson(Map<String, dynamic> json) => Item(
+        model: json["model"],
+        pk: json["pk"],
+        fields: Fields.fromJson(json["fields"]),
+    );
+
+    Map<String, dynamic> toJson() => {
+        "model": model,
+        "pk": pk,
+        "fields": fields.toJson(),
+    };
+}
+
+class Fields {
+    String title;
+    String itemType;
+    String itemName;
+    int itemPrice;
+    String itemDescription;
+
+    Fields({
+        required this.title,
+        required this.itemType,
+        required this.itemName,
+        required this.itemPrice,
+        required this.itemDescription,
+    });
+
+    factory Fields.fromJson(Map<String, dynamic> json) => Fields(
+        title: json["title"],
+        itemType: json["item_type"],
+        itemName: json["item_name"],
+        itemPrice: json["item_price"],
+        itemDescription: json["item_description"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "title": title,
+        "item_type": itemType,
+        "item_name": itemName,
+        "item_price": itemPrice,
+        "item_description": itemDescription,
+    };
+}
+```
+
+**Membuat halaman yang berisi daftar semua item yang terdapat pada endpoint JSON di Django yang telah kamu deploy.**
+**Tampilkan name, price, dan description dari masing-masing item pada halaman ini.**
+1. download package http dengan flutter pub add http pada proyek flutter
+2. buat list_itementry.dart pada lib/screens
+```
+import 'dart:convert';
+
+import 'package:consign_pbp/screens/menu.dart';
+import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
+
+class ItemEntryFormPage extends StatefulWidget {
+  const ItemEntryFormPage({super.key});
+
+  @override
+  State<ItemEntryFormPage> createState() => _ItemEntryFormPageState();
+}
+
 class _ItemEntryFormPageState extends State<ItemEntryFormPage> {
   final _formKey = GlobalKey<FormState>();
 	String _itemType = "";
 	String _itemName = "";
 	int _itemPrice = 0;
   String _itemDescription = "";
-
-}
-```
-
-Dalam tugas saya menggunakan model itemType, itemName, itemPrice, itemDescription
-
-**Memiliki sebuah tombol Save.**
-```
-Align(
-  alignment: Alignment.bottomCenter,
-  child: Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: ElevatedButton(
-      style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all(
-            Theme.of(context).colorScheme.primary),
+  
+  @override
+  Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Center(
+          child: Text(
+            'Mau Tambah Produk Apa?',
+          ),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
       ),
-      onPressed: () {
-        if (_formKey.currentState!.validate()) {
-          showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text('Produk berhasil tersimpan!'),
-                content: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Tipe Produk: $_itemType'),
-                      Text('Nama Produk: $_itemName'),
-                      Text('Harga Produk: $_itemPrice'),
-                      Text('Deskripsi Produk: $_itemDescription'),
-                    ],
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    child: const Text('OK'),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _formKey.currentState!.reset();
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    decoration: InputDecoration(
+                      hintText: "Tipe Produk",
+                      labelText: "Tipe Produk",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                    ),
+                    onChanged: (String? value) {
+                      setState(() {
+                        _itemType = value!;
+                      });
+                    },
+                    validator: (String? value) {
+                      if (value == null || value.isEmpty) {
+                        return "Tipe produk tidak boleh kosong!";
+                      }
+                      if (!value.contains(RegExp(r'[a-zA-Z]'))) {
+                        return "Tipe produk harus berisi kata-kata, tidak boleh hanya angka!";
+                      }
+                      if (value.trim().split(' ').where((word) => word.isNotEmpty).length < 1) {
+                        return "Tipe produk harus ada minimal 1 kata!";
+                      }
+                      return null;
                     },
                   ),
-                ],
-              );
-            },
-          );
-        }
-      },
-      child: const Text(
-        "Save",
-        style: TextStyle(color: Colors.white),
-      ),
-    ),
-  ),
-),
-```
+                ),
 
-**Setiap elemen input di formulir juga harus divalidasi dengan ketentuan sebagai berikut:**
-
-**Setiap elemen input tidak boleh kosong.**
-
-**Setiap elemen input harus berisi data dengan tipe data atribut modelnya.**
-
-
-itemType
-```
-validator: (String? value) {
-    if (value == null || value.isEmpty) {
-      return "Tipe produk tidak boleh kosong!";
-    }
-    if (!value.contains(RegExp(r'[a-zA-Z]'))) {
-      return "Tipe produk harus berisi kata-kata, tidak boleh hanya angka!";
-    }
-    if (value.trim().split(' ').where((word) => word.isNotEmpty).length < 1) {
-      return "Tipe produk harus ada minimal 1 kata!";
-    }
-    return null;
-  },
-
-```
-
-
-itemName
-```
-validator: (String? value) {
-    if (value == null || value.isEmpty) {
-      return "Nama produk tidak boleh kosong!";
-    }
-    if (!value.contains(RegExp(r'[a-zA-Z]'))) {
-      return "Nama produk harus berisi kata-kata, tidak boleh hanya angka!";
-    }
-    if (value.trim().split(' ').where((word) => word.isNotEmpty).length < 2) {
-      return "Nama produk harus ada minimal 2 kata!";
-    }
-    return null;
-  },
-```
-
-itemPrice
-```
-validator: (String? value) {
-  if (value == null || value.isEmpty) {
-    return "Harga tidak boleh kosong!";
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    decoration: InputDecoration(
+                      hintText: "Nama Produk",
+                      labelText: "Nama Produk",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                    ),
+                    onChanged: (String? value) {
+                      setState(() {
+                        _itemName = value!;
+                      });
+                    },
+                    validator: (String? value) {
+                      if (value == null || value.isEmpty) {
+                        return "Nama produk tidak boleh kosong!";
+                      }
+                      if (!value.contains(RegExp(r'[a-zA-Z]'))) {
+                        return "Nama produk harus berisi kata-kata, tidak boleh hanya angka!";
+                      }
+                      if (value.trim().split(' ').where((word) => word.isNotEmpty).length < 2) {
+                        return "Nama produk harus ada minimal 2 kata!";
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    decoration: InputDecoration(
+                      hintText: "Harga",
+                      labelText: "Harga",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                    ),
+                    onChanged: (String? value) {
+                      setState(() {
+                        _itemPrice = int.tryParse(value!) ?? 0;
+                      });
+                    },
+                    validator: (String? value) {
+                      if (value == null || value.isEmpty) {
+                        return "Harga tidak boleh kosong!";
+                      }
+                      if (int.tryParse(value) == null) {
+                        return "Harga harus berupa angka!";
+                      }
+                      if (int.parse(value) < 0) {
+                        return "Harga tidak boleh negatif!";
+                      }
+                      if (int.parse(value) == 0) {
+                        return "Harga tidak boleh nol!";
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    decoration: InputDecoration(
+                      hintText: "Deskripsi Produk",
+                      labelText: "Deskripsi Produk",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                    ),
+                    onChanged: (String? value) {
+                      setState(() {
+                        _itemDescription = value!;
+                      });
+                    },
+                    validator: (String? value) {
+                      if (value == null || value.isEmpty) {
+                        return "Deskripsi produk tidak boleh kosong!";
+                      }
+                      if (value.trim().split(' ').where((word) => word.isNotEmpty).length < 5) {
+                        return "Deskripsi produk harus ada minimal 5 kata!";
+                      }
+                      if (!value.contains(RegExp(r'[a-zA-Z]'))) {
+                        return "Deskripsi produk harus berisi kata-kata, tidak boleh hanya angka!";
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(
+                          Theme.of(context).colorScheme.primary),
+                    ),
+                    onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                            // Kirim ke Django dan tunggu respons
+                            // TODO: Ganti URL dan jangan lupa tambahkan trailing slash (/) di akhir URL!
+                            final response = await request.postJson(
+                                "http://127.0.0.1:8000/create-flutter/",
+                                jsonEncode(<String, String>{
+                                    // 'title': _title,
+                                    'item_type': _itemType,
+                                    'item_name': _itemName,
+                                    'item_price': _itemPrice.toString(),
+                                    'item_description': _itemDescription,
+                                // TODO: Sesuaikan field data sesuai dengan aplikasimu
+                                }),
+                            );
+                            if (context.mounted) {
+                                if (response['status'] == 'success') {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(const SnackBar(
+                                    content: Text("Produk baru berhasil disimpan!"),
+                                    ));
+                                    Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => MyHomePage()),
+                                    );
+                                } else {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(const SnackBar(
+                                        content:
+                                            Text("Terdapat kesalahan, silakan coba lagi."),
+                                    ));
+                                }
+                            }
+                        }
+                    },
+                      child: const Text(
+                        "Save",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        ),
+      );
   }
-  if (int.tryParse(value) == null) {
-    return "Harga harus berupa angka!";
-  }
-  if (int.parse(value) < 0) {
-    return "Harga tidak boleh negatif!";
-  }
-  if (int.parse(value) == 0) {
-    return "Harga tidak boleh nol!";
-  }
-  return null;
-},
-```
-itemDescription
-```
-validator: (String? value) {
-    if (value == null || value.isEmpty) {
-      return "Deskripsi produk tidak boleh kosong!";
-    }
-    if (value.trim().split(' ').where((word) => word.isNotEmpty).length < 5) {
-      return "Deskripsi produk harus ada minimal 5 kata!";
-    }
-    if (!value.contains(RegExp(r'[a-zA-Z]'))) {
-      return "Deskripsi produk harus berisi kata-kata, tidak boleh hanya angka!";
-    }
-    return null;
-  },
-```
-
-**Mengarahkan pengguna ke halaman form tambah item baru ketika menekan tombol Tambah Item pada halaman utama.**
-
-Pada MyHomePage, ketika pengguna menekan tombol Tambah Produk, mereka diarahkan ke halaman ItemEntryFormPage:
-```
-if (item.name == "Tambah Produk") {
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => const ItemEntryFormPage()),
-  );
 }
 ```
 
 
-**Memunculkan data sesuai isi dari formulir yang diisi dalam sebuah pop-up setelah menekan tombol Save pada halaman formulir tambah item baru.**
+**Membuat halaman detail untuk setiap item yang terdapat pada halaman daftar Item.**
 
-Setelah tombol Save ditekan, data input dari formulir ditampilkan dalam AlertDialog:
+**Halaman ini dapat diakses dengan menekan salah satu item pada halaman daftar Item.**
 
-```
-showDialog(
-  context: context,
-  builder: (context) {
-    return AlertDialog(
-      title: const Text('Produk berhasil tersimpan!'),
-      content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Tipe Produk: $_itemType'),
-            Text('Nama Produk: $_itemName'),
-            Text('Harga Produk: $_itemPrice'),
-            Text('Deskripsi Produk: $_itemDescription'),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          child: const Text('OK'),
-          onPressed: () {
-            Navigator.pop(context);
-            _formKey.currentState!.reset();
-          },
-        ),
-      ],
-    );
-  },
-);
+**Tampilkan seluruh atribut pada model item kamu pada halaman ini.**
 
-```
+**Tambahkan tombol untuk kembali ke halaman daftar item.**
 
-**Membuat sebuah drawer pada aplikasi dengan ketentuan sebagai berikut:**
+**Melakukan filter pada halaman daftar item dengan hanya menampilkan item yang terasosiasi dengan pengguna yang login.**
 
-**Drawer minimal memiliki dua buah opsi, yaitu Halaman Utama dan Tambah Item.**
-
-**Ketika memiih opsi Halaman Utama, maka aplikasi akan mengarahkan pengguna ke halaman utama.**
-
-**Ketika memiih opsi Tambah Item, maka aplikasi akan mengarahkan pengguna ke halaman form tambah item baru.**
-
-```
-ListTile(
-  leading: const Icon(Icons.home_outlined),
-  title: const Text('Halaman Utama'),
-  onTap: () {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => MyHomePage()),
-    );
-  },
-),
-ListTile(
-  leading: const Icon(Icons.add_circle_outline_rounded),
-  title: const Text('Tambah Produk'),
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => ItemEntryFormPage()),
-    );
-  },
-),
-```
+-------
 
 
+**Menjawab beberapa pertanyaan berikut pada README.md pada root folder (silakan modifikasi README.md yang telah kamu buat sebelumnya; tambahkan subjudul untuk setiap tugas).**
 
-**Apa kegunaan const di Flutter? Jelaskan apa keuntungan ketika menggunakan const pada kode Flutter. Kapan sebaiknya kita menggunakan const, dan kapan sebaiknya tidak digunakan?**
+**Jelaskan mengapa kita perlu membuat model untuk melakukan pengambilan ataupun pengiriman data JSON? Apakah akan terjadi error jika kita tidak membuat model terlebih dahulu?**
+Mempermudah Parsing JSON:
+Model membantu memetakan data JSON ke dalam objek Dart atau Python (di backend), sehingga lebih mudah diakses dengan properti atau metode yang relevan.
 
-const digunakan untuk mendefinisikan objek yang bersifat immutable, artinya nilainya tidak akan berubah selama runtime. Menggunakan const di Flutter bermanfaat dalam meningkatkan performa aplikasi karena widget yang didefinisikan dengan const hanya dibuat satu kali dan dapat digunakan kembali, sehingga mengurangi jumlah alokasi memori. Sebaiknya gunakan const ketika widget atau nilai tidak akan berubah setelah inisialisasi. Jika nilai tersebut dapat berubah, gunakan final atau tanpa modifier.
+Contoh: JSON dari server yang berisi data item_name, item_price, dan item_description dapat diakses sebagai properti model Item.
+Meningkatkan Keamanan:
+Tanpa model, pengambilan data secara langsung dari JSON rentan terhadap kesalahan jika kunci JSON tidak sesuai atau struktur data berubah.
+
+Mempermudah Debugging:
+Dengan model, data JSON yang diterima bisa divalidasi sebelum digunakan, sehingga meminimalisasi error runtime.
+
+Apakah Error Akan Terjadi Tanpa Model?
+Tidak selalu terjadi error, tetapi:
+
+Pengelolaan Data Jadi Sulit: Tanpa model, Anda harus memanipulasi data JSON sebagai map (key-value), yang tidak aman jika kunci atau struktur JSON berubah.
+Kesalahan Parsing: Jika kunci JSON tidak ada atau ada typo, aplikasi dapat mengalami error NoSuchMethodError.
+
+**Jelaskan fungsi dari library http yang sudah kamu implementasikan pada tugas ini**
+
+Melakukan Request HTTP:
+Library ini digunakan untuk mengirimkan request ke server Django, seperti:
+
+GET: Mengambil data item dari server.
+POST: Mengirim data registrasi atau login ke server.
+Memproses Response dari Server:
+Data yang diterima dari server (biasanya dalam format JSON) diproses oleh library ini agar dapat digunakan di Flutter.
+
+Mengelola Header HTTP:
+Library http memungkinkan pengaturan header (seperti Content-Type, Authorization) untuk komunikasi dengan server.
+
+**Jelaskan fungsi dari CookieRequest dan jelaskan mengapa instance CookieRequest perlu untuk dibagikan ke semua komponen di aplikasi Flutter.**
 
 
-**Jelaskan dan bandingkan penggunaan Column dan Row pada Flutter. Berikan contoh implementasi dari masing-masing layout widget ini!**
+Mengelola Session:
+CookieRequest menyimpan cookie session yang diterima dari Django setelah login. Cookie ini digunakan untuk menjaga sesi pengguna tetap aktif di aplikasi Flutter.
 
-Column digunakan untuk menyusun widget secara vertikal (dari atas ke bawah), sementara Row untuk menyusun secara horizontal (dari kiri ke kanan).
+Menyertakan Cookie pada Setiap Request:
+Instance CookieRequest secara otomatis menambahkan cookie session ke setiap request HTTP ke server Django, memastikan bahwa request diidentifikasi sebagai milik pengguna yang telah login.
 
-Contoh Column:
-```
-Column(
-  children: [
-    Text("Text 1"),
-    Text("Text 2"),
-    Text("Text 3"),
-  ],
-);
-```
-Contoh Row:
-```
-Row(
-  children: [
-    Icon(Icons.star),
-    Text("Row Example"),
-  ],
-);
-```
+Manajemen Autentikasi:
 
-**Sebutkan apa saja elemen input yang kamu gunakan pada halaman form yang kamu buat pada tugas kali ini. Apakah terdapat elemen input Flutter lain yang tidak kamu gunakan pada tugas ini? Jelaskan!**
+Login: Mengirimkan username dan password ke Django, menerima cookie session.
+Logout: Menghapus session dari server dan Flutter.
+Mengapa Instance CookieRequest Perlu Dibagikan ke Semua Komponen Flutter?
+Karena instance ini berfungsi sebagai satu-satunya sumber untuk autentikasi pengguna. Dengan membagikannya:
 
-Pada halaman form yang dibuat, elemen input yang digunakan adalah TextFormField untuk input tipe produk, nama produk, harga produk, dan deskripsi produk.
+Semua komponen Flutter dapat mengakses data session pengguna.
+Tidak perlu membuat ulang instance CookieRequest, menjaga konsistensi autentikasi.
 
-Terdapat elemen input Flutter lain yang tidak digunakan pada tugas ini, seperti Checkbox, Switch, DropdownButton, dan DatePicker. Elemen ini dapat digunakan sesuai kebutuhan, misalnya DropdownButton untuk pilihan kategori atau DatePicker untuk tanggal.
+**Jelaskan mekanisme pengiriman data mulai dari input hingga dapat ditampilkan pada Flutter.**
 
-**Bagaimana cara kamu mengatur tema (theme) dalam aplikasi Flutter agar aplikasi yang dibuat konsisten? Apakah kamu mengimplementasikan tema pada aplikasi yang kamu buat?**
+Langkah-Langkahnya:
+1. Input Data di Flutter:
+Pengguna mengisi form (contoh: form registrasi atau login).
+Data input pengguna disimpan sementara di variabel Flutter.
 
-Untuk konsistensi tampilan, tema diatur pada MaterialApp di bagian theme, menggunakan ThemeData. Contohnya:
-```
-theme: ThemeData(
-    colorScheme: ColorScheme.fromSwatch(
-        primarySwatch: Colors.lightBlue,
-    ).copyWith(secondary: Colors.lightBlue[50]),
-);
-```
+2. Mengirim Data ke Django:
+Data diubah menjadi JSON menggunakan jsonEncode.
+Data dikirim ke Django menggunakan POST melalui library http atau CookieRequest.
 
-**Bagaimana cara kamu menangani navigasi dalam aplikasi dengan banyak halaman pada Flutter?**
+3. Proses di Django:
+Django menerima data dari Flutter melalui request body.
+Django memvalidasi data, misalnya memeriksa format atau mengecek apakah data sudah ada di database.
+Setelah validasi, Django menyimpan data di database (untuk registrasi) atau membandingkan data login dengan data di database.
 
-Navigasi dalam aplikasi dilakukan menggunakan Navigator. Untuk berpindah halaman, digunakan Navigator.push() untuk membuka halaman baru dan Navigator.pushReplacement() untuk mengganti halaman saat ini dengan halaman yang baru. Contohnya:
+4. Respon dari Django:
+Django mengirimkan response JSON kembali ke Flutter (contoh: status sukses atau error).
 
-```
-Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => ItemEntryFormPage()),
-);
-```
-Akaan menavigasi ke page item entry form.
+5. Menampilkan Data di Flutter:
+Data JSON dari server diubah menjadi objek model menggunakan fungsi fromJson.
+Data ditampilkan di widget Flutter.
+
+
+**Jelaskan mekanisme autentikasi dari login, register, hingga logout. Mulai dari input data akun pada Flutter ke Django hingga selesainya proses autentikasi oleh Django dan tampilnya menu pada Flutter.**
+
+1. Register
+
+Input Data di Flutter:
+
+Pengguna mengisi form registrasi di Flutter.
+Data (username, password, email) dikirim ke Django menggunakan request POST.
+
+Proses di Django:
+
+Django menerima data, memvalidasi, dan menyimpan pengguna baru di database menggunakan model User.
+Respon ke Flutter:
+
+Django mengirimkan status sukses atau error (misalnya jika username sudah digunakan).
+
+2. Login
+
+Input Data di Flutter:
+
+Pengguna mengisi username dan password di form login.
+Data dikirim ke Django menggunakan POST.
+
+Proses di Django:
+
+Django memeriksa username dan password di database.
+Jika valid, Django membuat session baru dan mengirim cookie session ke Flutter.
+
+Respon ke Flutter:
+
+Flutter menerima cookie session dan menyimpannya di CookieRequest.
+Menu utama aplikasi ditampilkan.
+
+3. Logout
+
+Proses di Flutter:
+Flutter mengirim request POST ke endpoint logout di Django.
+
+Proses di Django:
+Django menghapus session pengguna.
+
+Flutter Menghapus Data Session:
+Flutter menghapus data session lokal, sehingga pengguna harus login kembali untuk mengakses fitur.

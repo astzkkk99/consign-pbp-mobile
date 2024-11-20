@@ -1,7 +1,7 @@
 import 'package:consign_pbp/screens/itementry_form.dart';
+import 'package:consign_pbp/screens/list_itementry.dart';
 import 'package:consign_pbp/screens/menu.dart';
 import 'package:flutter/material.dart';
-
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
@@ -63,6 +63,17 @@ class LeftDrawer extends StatelessWidget {
                   ));
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.add_reaction_rounded),
+            title: const Text('Daftar Item'),
+            onTap: () {
+                // Route menu ke halaman item
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ItemEntryPage()),
+                );
+            },
+        ),
         ],
       ),
     );
